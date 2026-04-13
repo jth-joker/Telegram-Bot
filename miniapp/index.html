@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telegram Mini App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { min-height: 100vh; background: #0f172a; color: #e2e8f0; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-button { transition: transform .15s ease, background .2s ease; }
+    .nav-button:hover { transform: translateY(-1px); }
+    .section-card { background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(16px); }
+    .form-input { background: #111827; color: #f8fafc; }
+    .toast { position: fixed; bottom: 1rem; right: 1rem; z-index: 50; min-width: 240px; }
+    .dark-mode { background: #020617; }
+  </style>
+</head>
+<body class="antialiased">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm uppercase tracking-[0.3em] text-cyan-400">Telegram Mini App</p>
+        <h1 class="mt-2 text-3xl font-semibold text-slate-100">Üyelik & Sorgu Paneli</h1>
+        <p class="mt-2 max-w-2xl text-slate-400">Free / VIP üyelik, dinamik servisler ve yönetici paneli ile modern Telegram Mini App.</p>
+      </div>
+      <div class="space-x-2 text-right">
+        <span id="member-badge" class="inline-flex items-center rounded-full bg-cyan-500/15 px-4 py-2 text-sm font-medium text-cyan-100 ring-1 ring-cyan-500/20">Yükleniyor...</span>
+      </div>
+    </header>
+
+    <div class="grid gap-6 lg:grid-cols-[260px_1fr]">
+      <aside class="space-y-3">
+        <button data-page="home" class="nav-button w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-4 text-left text-slate-100">Ana Sayfa</button>
+        <button data-page="services" class="nav-button w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-4 text-left text-slate-100">Sorgu Hizmetleri</button>
+        <button data-page="vip" class="nav-button w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-4 text-left text-slate-100">VIP Satın Al</button>
+        <button data-page="profile" class="nav-button w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-4 text-left text-slate-100">Profil</button>
+        <div id="admin-nav" class="hidden space-y-2 pt-4 border-t border-slate-800">
+          <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Admin</p>
+          <button data-page="admin" class="nav-button w-full rounded-2xl border border-red-700 bg-red-900/80 px-4 py-4 text-left text-red-200">Yönetici Paneli</button>
+        </div>
+      </aside>
+
+      <main>
+        <div id="loader" class="rounded-3xl border border-slate-800 bg-slate-950/80 p-8 text-center shadow-2xl shadow-slate-950/20">
+          <p class="text-xl font-semibold text-slate-100">Telegram Kimlik Doğrulaması yapılıyor...</p>
+          <p class="mt-3 text-slate-400">Lütfen Telegram Mini App içinde açtığınızdan emin olun.</p>
+        </div>
+
+        <section id="home" class="page active section-card rounded-3xl border border-slate-800 p-8 shadow-xl shadow-slate-950/20">
+          <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-400">Hoş geldiniz</p>
+              <h2 class="mt-2 text-2xl font-semibold text-slate-100">Ana Sayfa</h2>
+            </div>
+            <div class="rounded-3xl bg-slate-900/80 px-4 py-3 text-sm text-slate-300 ring-1 ring-slate-700">Mini App kullanıcı deneyimi hazır.</div>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+              <h3 class="text-lg font-semibold text-slate-100">Hızlı erişim</h3>
+              <p class="mt-3 text-slate-400">Tercih ettiğiniz servisleri seçin, parametre girin ve sonuçları anında görün.</p>
+            </article>
+            <article class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+              <h3 class="text-lg font-semibold text-slate-100">Üyelik yönetimi</h3>
+              <p class="mt-3 text-slate-400">Üyelik durumunu takip edin, VIP sürenizi kontrol edin, admin paneliyle kullanıcı yönetimi yapın.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="services" class="page section-card rounded-3xl border border-slate-800 p-8 shadow-xl shadow-slate-950/20">
+          <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-400">Servisler</p>
+              <h2 class="mt-2 text-2xl font-semibold text-slate-100">Sorgu Hizmetleri</h2>
+            </div>
+            <button id="refresh-services" class="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400">Yenile</button>
+          </div>
+          <div id="services-list" class="space-y-4"></div>
+        </section>
+
+        <section id="vip" class="page section-card rounded-3xl border border-slate-800 p-8 shadow-xl shadow-slate-950/20">
+          <div class="mb-6">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-400">VIP</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-100">VIP Satın Al</h2>
+          </div>
+          <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+            <p class="text-slate-300">VIP üyelik ile tüm servislere limitsiz erişim sağlarsınız. Üyelik süresi bitince sistem otomatik olarak free seviyeye döner.</p>
+            <ul class="mt-5 space-y-3 text-slate-300">
+              <li>• Tüm VIP servislerden anında erişim</li>
+              <li>• Limitsiz sorgu</li>
+              <li>• Üyelik süresi bitiminde otomatik kontrol</li>
+              <li>• Yöneticinin verdiği ek süreleri görebilirsiniz</li>
+            </ul>
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button id="buy-vip" class="rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400">VIP Talep Et</button>
+              <button id="view-profile-vip" class="rounded-full border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-800">Profilime Git</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="profile" class="page section-card rounded-3xl border border-slate-800 p-8 shadow-xl shadow-slate-950/20">
+          <div class="mb-6">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-400">Profil</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-100">Kullanıcı Bilgileri</h2>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <article class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+              <h3 class="text-lg font-semibold text-slate-100">Kullanıcı</h3>
+              <p class="mt-3 text-slate-300" id="profile-username">@username</p>
+              <p class="mt-1 text-slate-400" id="profile-telegram-id"></p>
+            </article>
+            <article class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+              <h3 class="text-lg font-semibold text-slate-100">Üyelik Durumu</h3>
+              <p class="mt-3 text-slate-300" id="profile-membership"></p>
+              <p class="mt-1 text-slate-400" id="profile-expire"></p>
+            </article>
+          </div>
+          <div class="mt-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+            <h3 class="text-lg font-semibold text-slate-100">Kullanım Bilgisi</h3>
+            <p class="mt-3 text-slate-300">Bugünkü sorgu sayınız:</p>
+            <p class="mt-2 text-xl font-semibold text-cyan-300" id="profile-query-count"></p>
+          </div>
+        </section>
+
+        <section id="admin" class="page section-card rounded-3xl border border-slate-800 p-8 shadow-xl shadow-slate-950/20">
+          <div class="mb-6">
+            <p class="text-sm uppercase tracking-[0.3em] text-red-400">Admin</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-100">Yönetici Paneli</h2>
+          </div>
+          <div class="grid gap-6 xl:grid-cols-2">
+            <div class="space-y-6">
+              <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+                <div class="flex items-center justify-between gap-3">
+                  <h3 class="text-lg font-semibold text-slate-100">Kullanıcılar</h3>
+                  <button id="reload-users" class="rounded-full bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Yenile</button>
+                </div>
+                <div id="admin-users" class="mt-4 space-y-3"></div>
+              </div>
+              <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+                <h3 class="text-lg font-semibold text-slate-100">Servis Yönetimi</h3>
+                <div id="admin-services" class="mt-4 space-y-3"></div>
+                <button id="open-service-form" class="mt-4 inline-flex items-center justify-center rounded-full bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950">Yeni Servis Ekle</button>
+              </div>
+            </div>
+            <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-6">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-lg font-semibold text-slate-100">Sistem Logları</h3>
+                <button id="reload-logs" class="rounded-full bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Yenile</button>
+              </div>
+              <div id="admin-logs" class="mt-4 space-y-3"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="service-form-modal" class="fixed inset-0 hidden items-center justify-center bg-slate-950/80 p-4">
+    <div class="w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+      <h3 class="text-xl font-semibold text-slate-100">Servis Ekle / Düzenle</h3>
+      <div class="mt-4 grid gap-4">
+        <input id="service-form-id" type="hidden" />
+        <input id="service-form-name" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3" placeholder="Servis adı" />
+        <input id="service-form-api" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3" placeholder="API URL (ör: https://example.com/query?tc={input})" />
+        <textarea id="service-form-description" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3" rows="4" placeholder="Servis açıklaması"></textarea>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <input id="service-form-price" type="number" step="0.01" min="0" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3" placeholder="Fiyat" />
+          <select id="service-form-vip" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3">
+            <option value="0">Free</option>
+            <option value="1">VIP</option>
+          </select>
+          <select id="service-form-status" class="form-input w-full rounded-2xl border border-slate-700 px-4 py-3">
+            <option value="active">Aktif</option>
+            <option value="inactive">Pasif</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button id="save-service-button" class="rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950">Kaydet</button>
+        <button id="close-service-form" class="rounded-full border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-200">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
